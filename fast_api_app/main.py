@@ -1,14 +1,17 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
-from .database import get_db
+from .database import Base, engine, get_db
 from sqlalchemy import text
+from . import model
 
 app = FastAPI()
+
+Base.metadata.create_all(bind=engine)
+
+
 @app.get("/")
-def main():
-    return {
-        "message":"fastapi server is running successfully"
-    }
+def home():
+    return {"message": "FastAPI is running"}
 @app.get("/test-db")
 def test_db(db:Session=Depends(get_db)):
     db.execute(text("SELECT 1"))
