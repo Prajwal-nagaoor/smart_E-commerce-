@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 from .database import Base, engine, get_db
 from sqlalchemy import text
 from . import model
-from .schemas import Registration
+from .schemas import Registration, Login
 from .model import User
-from .auth import hash_password
+from .auth import hash_password, verify_password, create_access_token
 
 
 app = FastAPI()
@@ -50,6 +50,38 @@ def register(user_data:Registration, db:Session=Depends(get_db)):
             "Role":new_user.role
         }
     }
+@app.post("/login")
+def login(user_data:Login, db:Session = Depends(get_db)):
+    existing_user = db.query(User).filter(
+        User.email == user_data.email
+    ).first()
 
+    if not existing_user:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid Email and Password"
+        )
+    password = verify_password(
+        user_data.password,
+        existing_user.password
+    )
+    if not password:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid Email and Password"
+        )
+    access_token = create_access_token(
+        {"user_id": existing_user.id,
+    "email": existing_user.email,
+    "role": existing_user.role}
+    )
 
+    return {
+        "message":"Login Successful",
+        "user":existing_user.name,
+        "Role":existing_user.role,
+        "Email":existing_user.email,
+        "Access Token":access_token
+    }
+    
     
