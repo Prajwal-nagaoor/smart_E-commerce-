@@ -10,4 +10,10 @@ class Registration(BaseModel):
 class Login(BaseModel):
     email : EmailStr
     password : str
+
+class profileresponse(BaseModel):
+    id : int
+    name:str
+    email : str
+
     

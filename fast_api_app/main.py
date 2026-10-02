@@ -1,17 +1,26 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from .database import Base, engine, get_db
 from sqlalchemy import text
 from . import model
-from .schemas import Registration, Login
+from .schemas import Registration, Login,profileresponse
 from .model import User
-from .auth import hash_password, verify_password, create_access_token
-
-
+from .auth import hash_password, verify_password, create_access_token, verify_access_token,get_current_user
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from starlette.middleware.sessions import SessionMiddleware
+from .auth import router as auth_router
+import os
 app = FastAPI()
+app.include_router(auth_router)
+
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=os.getenv("AUTH0_SECRET", "my-secret-key-change-this")
+)
 
 Base.metadata.create_all(bind=engine)
 
+SECURITY = HTTPBearer()
 
 @app.get("/")
 def home():
@@ -83,5 +92,20 @@ def login(user_data:Login, db:Session = Depends(get_db)):
         "Email":existing_user.email,
         "Access Token":access_token
     }
-    
-    
+@app.get("/prfile")
+def profile(current_user : User=Depends(get_current_user)):
+    return {
+        "message":"Profile details",
+        "user_id":current_user.id,
+        "username":current_user.name,
+        "email":current_user.email,
+        "role":current_user.role
+    }
+@app.post("/logout")
+def logout(credentials:HTTPAuthorizationCredentials = Depends(SECURITY)):
+    token = credentials.credentials
+
+    return {
+        "message":"Logout Successfully",
+        "details":"Please remove the access token from the client"
+    }
