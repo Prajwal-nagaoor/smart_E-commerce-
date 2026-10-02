@@ -1,6 +1,7 @@
-from sqlalchemy import Column, String, Integer
+from sqlalchemy import Column, String, Integer, DECIMAL, Boolean, DateTime
+from decimal import Decimal
 from .database import Base
-
+from datetime import timezone, datetime
 
 class User(Base):
     __tablename__ = "users"
@@ -10,3 +11,15 @@ class User(Base):
     email = Column(String(30), nullable=False, unique=True)
     password = Column(String(255), nullable=False)
     role = Column(String(10), nullable=False, default="customer")
+
+class Product(Base):
+    __tablename__ = "Product"
+
+    id = Column(Integer, primary_key=True, index=True)
+    product_name = Column(String(200), nullable=False)
+    product_desc = Column(String(400), nullable=False)
+    product_price = Column(DECIMAL(10,2), nullable=False, default=0)
+    category = Column(String(200), nullable=False)
+    stock = Column(Integer, nullable=False, default=0)
+    popularity = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.now)
