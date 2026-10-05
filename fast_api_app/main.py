@@ -3,14 +3,14 @@ from sqlalchemy.orm import Session
 from .database import Base, engine, get_db
 from sqlalchemy import text
 from . import model
-from .schemas import Registration, Login,profileresponse
+from .schemas import Registration, Login,profileresponse, update_profile
 from .model import User
 from .auth import hash_password, verify_password, create_access_token, verify_access_token,get_current_user
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from starlette.middleware.sessions import SessionMiddleware
 from .auth import router as auth_router
 import os
-from .product import router as product_router
+from .product import router as product_router, get_optional_user
 app = FastAPI()
 app.include_router(auth_router)
 app.include_router(product_router)
@@ -90,6 +90,7 @@ def login(user_data:Login, db:Session = Depends(get_db)):
 
     return {
         "message":"Login Successful",
+        "user_id":existing_user.id,
         "user":existing_user.name,
         "Role":existing_user.role,
         "Email":existing_user.email,
@@ -112,3 +113,40 @@ def logout(credentials:HTTPAuthorizationCredentials = Depends(SECURITY)):
         "message":"Logout Successfully",
         "details":"Please remove the access token from the client"
     }
+@app.put("/update-profile/{user_id}", response_model=profileresponse)
+def update_profile(user_id : int,user_data:update_profile,db:Session=Depends(get_db), current_user:User=Depends(get_current_user)):
+    
+    if current_user.role != "ADMIN" and current_user.id != user_id:
+        raise HTTPException(
+            status_code=403,
+            detail="You can update only your own profile"
+        )
+    user = db.query(User).filter(
+        User.id == user_id
+    ).first()
+    if user is None:
+        raise HTTPException(
+            status_code=404,
+            detail="User not exists"
+        )
+    
+    email_exists = db.query(User).filter(
+        User.email == user_data.email,
+        User.id != user.id
+    ).first()
+
+    if email_exists:
+        raise HTTPException(
+            status_code=400,
+            detail="Email already exists"
+        )
+
+    user.name = user_data.name
+    user.email = user_data.email
+    if current_user.role == 'ADMIN':
+        user.role = user_data.role
+
+    db.commit()
+    db.refresh(user)
+
+    return user

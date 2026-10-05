@@ -140,3 +140,76 @@ def delete_product(product_id:int, current_user : User = Depends(get_optional_us
     return {
         "message":"Product deleted successfully"
     }
+@router.get("/search",response_model=list[Product_response])
+def search_product(product_name:str,
+                   db:Session=Depends(get_db)):
+    products = db.query(Product).filter(
+        Product.product_name.ilike(f"%{product_name}%")
+    ).all()
+    if products is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Product not found"
+        )
+    return products
+@router.get("/category/{category_name}", response_model=list[Product_response])
+def get_product_by_category(
+    category_name: str,
+    db: Session = Depends(get_db)
+):
+    products = db.query(Product).filter(
+        Product.category.ilike(f"%{category_name}%")
+    ).all()
+
+    if not products:
+        raise HTTPException(
+            status_code=404,
+            detail="No product found in this category"
+        )
+
+    return products
+
+@router.get("/price", response_model=list[Product_response])
+def get_product_by_price(
+    min_price:float,
+    max_price:float,
+    db: Session = Depends(get_db)
+):
+    products = db.query(Product).filter(
+        Product.product_price >= min_price,
+        Product.product_price <= max_price
+    ).all()
+
+    if not products:
+        raise HTTPException(
+            status_code=404,
+            detail="No product found in this price range"
+        )
+
+    return products
+@router.get("/papular", response_model=list[Product_response])
+def get_product_by_papularity(db:Session=Depends(get_db)):
+    products = db.query(Product).filter(
+        Product.popularity == True
+    ).all()
+
+    if not products:
+        raise HTTPException(
+            status_code=404,
+            detail="No papular products found"
+        )
+
+    return products
+@router.get("/{product_id}", response_model=Product_response)
+def get_single_product(product_id : int,
+                       db:Session=Depends(get_db)):
+    product = db.query(Product).filter(
+        Product.id == product_id
+    ).first()
+
+    if product is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Product not found"
+        )
+    return product

@@ -8,6 +8,11 @@ class Registration(BaseModel):
     password : str
     role : str
 
+class update_profile(BaseModel):
+    name : str
+    email : EmailStr
+    password : str
+    role : str
 
 class Login(BaseModel):
     email : EmailStr
