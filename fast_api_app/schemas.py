@@ -6,6 +6,7 @@ class Registration(BaseModel):
     name : str
     email : EmailStr
     password : str
+    role : str
 
 
 class Login(BaseModel):
@@ -36,4 +37,12 @@ class Product_response(BaseModel):
 
     class Config:
         from_attributes = True
+
+class Product_update(BaseModel):
+    product_name: str | None=None
+    product_desc: str | None=None
+    product_price: Decimal | None=None
+    category: str | None=None
+    stock: int | None=None
+    popularity: bool | None=None
     
