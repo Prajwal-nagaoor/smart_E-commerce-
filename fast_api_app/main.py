@@ -11,9 +11,11 @@ from starlette.middleware.sessions import SessionMiddleware
 from .auth import router as auth_router
 import os
 from .product import router as product_router, get_optional_user
+from .cart import cart as cart_router
 app = FastAPI()
 app.include_router(auth_router)
 app.include_router(product_router)
+app.include_router(cart_router)
 app.add_middleware(
     SessionMiddleware,
     secret_key=os.getenv("AUTH0_SECRET", "my-secret-key-change-this")

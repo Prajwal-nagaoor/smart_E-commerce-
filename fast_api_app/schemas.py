@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 from decimal import Decimal
 from datetime import datetime
 class Registration(BaseModel):
@@ -50,4 +50,44 @@ class Product_update(BaseModel):
     category: str | None=None
     stock: int | None=None
     popularity: bool | None=None
+class add_cart(BaseModel):
+    product_id : int
+    quantity : int
+class cart_response(BaseModel):
+    id : int
+    user_id : int
+    product_id : int
+    quentity : int
+
+class OrderItemResponse(BaseModel):
+    id :int
+    order_id : int
+    product_id :int
+    quantity : int
+    price : Decimal
+
+    model_config = ConfigDict(from_attributes=True)
+
+class OrderResponse(BaseModel):
+    id : int
+    user_id : int
+    total_amount :Decimal
+    payment_status : str
+    order_status : str
+    created_at : datetime
+
+    model_config=ConfigDict(from_attributes=True)
+
+
+class PaymentResponse(BaseModel):
+    id : int
+    order_id :int
+    amount : Decimal
+    payment_method : str
+    transaction_id :str | None= None
+    status : str
+    created_at : datetime
+
+    model_config=ConfigDict(from_attributes=True)
+
     

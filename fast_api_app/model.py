@@ -27,3 +27,50 @@ class Product(Base):
     created_at = Column(DateTime, default=datetime.now)
 
     user = relationship(User)
+class Cart(Base):
+
+    __tablename__ = "Cart"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("Product.id"), nullable=False)
+    quentity = Column(Integer, nullable=False)
+
+    user = relationship(User)
+    product = relationship(Product)
+class Order(Base):
+    __tablename__ = "Orders"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer,ForeignKey("users.id"), nullable=False)
+    total_amount = Column(DECIMAL(10,2), nullable=False, default=0)
+    payment_status = Column(String(200), nullable=False, default="Pending")
+    order_status = Column(String(200), nullable=False, default="Pending")
+    created_at = Column(DateTime, default=datetime.now)
+
+    user = relationship(User)
+
+class OrderItem(Base):
+    __tablename__ = "orderitem"
+
+    id = Column(Integer, primary_key=True, index=True)
+    order_id = Column(Integer, ForeignKey("Orders.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("Product.id"), nullable=False)
+    quantity = Column(Integer,nullable=False)
+    price = Column(DECIMAL(10,2), nullable=False)
+
+    order = relationship(Order)
+    product = relationship(Product)
+
+class Payment(Base):
+
+    __tablename__ = "payments"
+    id = Column(Integer, primary_key=True, index=True)
+    order_id = Column(Integer, ForeignKey("Orders.id"), nullable=False)
+    amount = Column(DECIMAL(10,2), nullable=False)
+    payment_method = Column(String(200), nullable=False)
+    transaction_id = Column(String(200), nullable=False)
+    status = Column(String(200), nullable=False, default="Pending")
+    created_at = Column(DateTime, default=datetime.now)
+
+    order = relationship(Order)
+
