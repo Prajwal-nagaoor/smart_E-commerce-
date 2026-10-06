@@ -68,7 +68,7 @@ class Payment(Base):
     order_id = Column(Integer, ForeignKey("Orders.id"), nullable=False)
     amount = Column(DECIMAL(10,2), nullable=False)
     payment_method = Column(String(200), nullable=False)
-    transaction_id = Column(String(200), nullable=False)
+    transaction_id = Column(String(200), nullable=True)
     status = Column(String(200), nullable=False, default="Pending")
     created_at = Column(DateTime, default=datetime.now)
 

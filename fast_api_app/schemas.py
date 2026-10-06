@@ -58,7 +58,7 @@ class cart_response(BaseModel):
     user_id : int
     product_id : int
     quentity : int
-
+   
 class OrderItemResponse(BaseModel):
     id :int
     order_id : int
@@ -78,7 +78,12 @@ class OrderResponse(BaseModel):
 
     model_config=ConfigDict(from_attributes=True)
 
-
+class PaymentRequest(BaseModel):
+    order_id :int
+    payment_method : str
+    transaction_id : str | None = None
+    status : str
+    
 class PaymentResponse(BaseModel):
     id : int
     order_id :int
