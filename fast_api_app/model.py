@@ -24,6 +24,7 @@ class Product(Base):
     category = Column(String(200), nullable=False)
     stock = Column(Integer, nullable=False, default=0)
     popularity = Column(Boolean, default=True)
+    image = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.now)
 
     user = relationship(User)

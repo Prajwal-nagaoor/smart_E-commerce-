@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, Form
+from fastapi import APIRouter, Depends, HTTPException, Form,UploadFile, File
+import os
+import shutil
 from sqlalchemy.orm import Session
 
 from .database import get_db
@@ -31,35 +33,83 @@ def get_optional_user(
         return user
     except JWTError:
         return None
-@router.post("/", response_model=Product_response)
-def create_product(product_data:Product_create,
-                   db:Session=Depends(get_db),
-                   current_user:User=Depends(get_current_user)):
-    if not product_data.product_name or not product_data.product_desc or not product_data.product_price or not product_data.category or not product_data.stock:
+@router.post("/create-product")
+def create_product(
+    product_name: str = Form(...),
+    product_desc: str = Form(...),
+    product_price: float = Form(...),
+    category: str = Form(...),
+    stock: int = Form(...),
+    popularity: bool = Form(True),
+    image: UploadFile = File(...),
+
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+
+    # Only seller can create product
+    if current_user.role != "SELLER":
+        raise HTTPException(
+            status_code=403,
+            detail="Only sellers can create products"
+        )
+
+    # Validate product data using your existing schema
+    try:
+        product_data = Product_create(
+            product_name=product_name,
+            product_desc=product_desc,
+            product_price=product_price,
+            category=category,
+            stock=stock,
+            popularity=popularity
+        )
+    except Exception as e:
         raise HTTPException(
             status_code=400,
-            detail="all fields need to be filled"
+            detail=str(e)
         )
-    if current_user.role not in ("SELLER","ADMIN"):
+
+    # Check image
+    if not image.content_type or not image.content_type.startswith("image/"):
         raise HTTPException(
             status_code=400,
-            detail="Only seller and admin and add the product"
+            detail="Only image files are allowed"
         )
+
+    # Create folder if it doesn't exist
+    upload_dir = "media/products"
+    os.makedirs(upload_dir, exist_ok=True)
+
+    # Create image path
+    file_path = os.path.join(upload_dir, image.filename)
+
+    # Save image
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(image.file, buffer)
+
+    # Create product
     new_product = Product(
-        user_id = current_user.id,
-        product_name = product_data.product_name,
-        product_desc = product_data.product_desc,
-        product_price = product_data.product_price,
-        category = product_data.category,
-        stock = product_data.stock,
-        popularity = product_data.popularity
+        user_id=current_user.id,
+        product_name=product_data.product_name,
+        product_desc=product_data.product_desc,
+        product_price=product_data.product_price,
+        category=product_data.category,
+        stock=product_data.stock,
+        popularity=product_data.popularity,
+        image=file_path
     )
 
     db.add(new_product)
     db.commit()
     db.refresh(new_product)
 
-    return new_product
+    return {
+        "message": "Product created successfully",
+        "product_id": new_product.id,
+        "product_name": new_product.product_name,
+        "image": new_product.image
+    }
 @router.get("/", response_model=list[Product_response])
 def get_all_product(db:Session=Depends(get_db),
                     current_user:User=Depends(get_optional_user)):
