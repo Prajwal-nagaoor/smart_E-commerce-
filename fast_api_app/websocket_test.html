@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+</head>
+
+<body>
+
+<h2>WebSocket Notification Test</h2>
+
+<button onclick="connectWebSocket()">
+    Connect
+</button>
+
+<p id="status">Disconnected</p>
+
+<script>
+
+let socket;
+
+function connectWebSocket() {
+
+    const userId = 10;
+
+    socket = new WebSocket(
+        `ws://127.0.0.1:8000/ws/${userId}`
+    );
+
+    socket.onopen = function() {
+        document.getElementById("status").innerText =
+            "WebSocket Connected";
+    };
+
+    socket.onmessage = function(event) {
+
+        const data = JSON.parse(event.data);
+
+        alert(data.message);
+
+        console.log("Notification:", data);
+    };
+
+    socket.onclose = function() {
+
+        document.getElementById("status").innerText =
+            "WebSocket Disconnected";
+    };
+
+    socket.onerror = function(error) {
+
+        console.log("WebSocket Error:", error);
+    };
+}
+
+</script>
+
+</body>
+</html>

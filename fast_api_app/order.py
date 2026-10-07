@@ -7,7 +7,8 @@ from .model import User, Product, Cart, Order, OrderItem, Payment, Notification
 import stripe
 import os
 from dotenv import load_dotenv
-
+from .email_service import send_email
+from .websocket import manager
 load_dotenv()
 
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
@@ -92,6 +93,11 @@ def create_order(
         db.delete(i)
 
     db.commit()
+    send_email(
+    current_user.email,
+    "Order Confirmation",
+    f"Your order #{new_order.id} has been placed successfully."
+)
     db.refresh(new_order)
 
     return new_order
@@ -172,6 +178,94 @@ def view_orders(db:Session=Depends(get_db),current_user:User=Depends(get_current
             detail="No orders is found"
         )
     return order
+@order.put("/update-order-status/{order_id}")
+async def update_order_status(
+    order_id: int,
+    status: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+
+    order_data = db.query(Order).filter(
+        Order.id == order_id
+    ).first()
+
+    if not order_data:
+        raise HTTPException(
+            status_code=404,
+            detail="Order not found"
+        )
+
+    if current_user.role != "ADMIN":
+        raise HTTPException(
+            status_code=403,
+            detail="Only admin can update order status"
+        )
+
+    allowed_status = [
+        "Pending",
+        "Shipped",
+        "Delivered",
+        "Cancelled"
+    ]
+
+    if status not in allowed_status:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid order status"
+        )
+
+    order_data.order_status = status
+
+    if status == "Shipped":
+
+        # In-app notification
+        new_notification = Notification(
+            user_id=order_data.user_id,
+            type="SHIPPING_UPDATE",
+            message=f"Your order #{order_data.id} has been shipped.",
+            is_read=False
+        )
+
+        db.add(new_notification)
+
+        # Get customer
+        user = db.query(User).filter(
+            User.id == order_data.user_id
+        ).first()
+
+        # Email notification
+        if user:
+            send_email(
+                user.email,
+                "Order Shipped",
+                f"""
+Hello {user.name},
+
+Your order #{order_data.id} has been shipped successfully.
+
+Thank you for shopping with us.
+
+Smart E-Commerce Platform
+"""
+            )
+
+    db.commit()
+    db.refresh(order_data)
+
+    # Real-time WebSocket notification
+    if status == "Shipped":
+
+        await manager.send_notification(
+            order_data.user_id,
+            f"Your order #{order_data.id} has been shipped."
+        )
+
+    return {
+        "message": "Order status updated successfully",
+        "order_id": order_data.id,
+        "order_status": order_data.order_status
+    }
 @order.post("/make-payment")
 def payment(
     payment_data: PaymentRequest,
@@ -201,6 +295,11 @@ def payment(
             currency="inr",
             automatic_payment_methods={"enabled": True}
         )
+        send_email(
+                current_user.email,
+                "Payment SUCCESSFUL",
+                f"Payment SUCCESSFUL for your order #{order.id}. Please try again."
+            )
 
     except stripe.StripeError as e:
         new_notification = Notification(
@@ -211,7 +310,11 @@ def payment(
         )
         db.add(new_notification)
         db.commit()
-        
+        send_email(
+        current_user.email,
+        "Payment Failed",
+        f"Payment failed for your order #{order.id}. Please try again."
+    )
         raise HTTPException(
             status_code=400,
             detail=str(e)

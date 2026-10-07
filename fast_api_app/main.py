@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, Header
+from fastapi import FastAPI, Depends, HTTPException, Header,WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 from .database import Base, engine, get_db
 from sqlalchemy import text
@@ -13,6 +13,7 @@ import os
 from .product import router as product_router, get_optional_user
 from .cart import cart as cart_router
 from .order import order as order_router
+from .websocket import manager
 app = FastAPI()
 app.include_router(auth_router)
 app.include_router(product_router)
@@ -22,7 +23,20 @@ app.add_middleware(
     SessionMiddleware,
     secret_key=os.getenv("AUTH0_SECRET", "my-secret-key-change-this")
 )
+@app.websocket("/ws/{user_id}")
+async def websocket_endpoint(
+    websocket: WebSocket,
+    user_id: int
+):
+    await manager.connect(user_id, websocket)
 
+    try:
+        while True:
+            await websocket.receive_text()
+
+    except WebSocketDisconnect:
+        manager.disconnect(user_id, websocket)
+        
 Base.metadata.create_all(bind=engine)
 
 SECURITY = HTTPBearer()
