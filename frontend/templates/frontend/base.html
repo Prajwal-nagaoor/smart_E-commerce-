@@ -1,0 +1,531 @@
+{% load static %}
+
+<!doctype html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    >
+
+    <title>
+        {{ title|default:"SmartCart" }} · SmartCart
+    </title>
+
+
+    <!-- Fonts -->
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <!-- Frontend CSS -->
+
+    <link
+        rel="stylesheet"
+        href="{% static 'frontend/css/app.css' %}"
+    >
+
+</head>
+
+
+<body>
+
+
+<div class="app-shell">
+
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside
+        class="sidebar"
+        id="sidebar"
+    >
+
+
+        <!-- BRAND -->
+
+        <div class="brand">
+
+            <span class="brand-mark">
+                S
+            </span>
+
+            <span>
+                SmartCart
+            </span>
+
+        </div>
+
+
+        <!-- ROLE -->
+
+        <div class="role-pill">
+
+            {{ request.session.role|default:"GUEST" }}
+
+        </div>
+
+
+        <!-- =================================================
+             NAVIGATION
+        ================================================== -->
+
+        <nav class="nav">
+
+
+            <!-- DASHBOARD -->
+
+            <a
+                href="{% url 'frontend_dashboard' %}"
+                class="nav-link"
+            >
+                ⌂
+                <span>
+                    Dashboard
+                </span>
+            </a>
+
+
+            <!-- =================================================
+                 CUSTOMER
+            ================================================== -->
+
+            {% if request.session.role == 'CUSTOMER' or request.session.role == 'USER' or request.session.role == 'customer' %}
+
+
+                <!-- SHOP -->
+
+                <a
+                    href="{% url 'products' %}"
+                    class="nav-link"
+                >
+                    ◈
+                    <span>
+                        Shop
+                    </span>
+                </a>
+
+
+                <!-- CART -->
+
+                <a
+                    href="{% url 'cart' %}"
+                    class="nav-link"
+                >
+                    🛒
+
+                    <span>
+                        Cart
+                    </span>
+
+                    {% if cart_count %}
+
+                        <b class="nav-count">
+                            {{ cart_count }}
+                        </b>
+
+                    {% endif %}
+
+                </a>
+
+
+                <!-- MY ORDERS -->
+
+                <a
+                    href="{% url 'orders' %}"
+                    class="nav-link"
+                >
+                    ▣
+
+                    <span>
+                        My Orders
+                    </span>
+
+                </a>
+
+
+                <!-- NOTIFICATIONS -->
+
+                <a
+                    href="{% url 'notifications' %}"
+                    class="nav-link"
+                >
+                    ♢
+
+                    <span>
+                        Notifications
+                    </span>
+
+                    {% if unread_count %}
+
+                        <b class="nav-count">
+                            {{ unread_count }}
+                        </b>
+
+                    {% endif %}
+
+                </a>
+
+
+            <!-- =================================================
+                 SELLER
+            ================================================== -->
+
+            {% elif request.session.role == 'SELLER' %}
+
+
+                <!-- MY PRODUCTS -->
+
+                <a
+                    href="{% url 'seller_products' %}"
+                    class="nav-link"
+                >
+                    ◈
+
+                    <span>
+                        My Products
+                    </span>
+
+                </a>
+
+
+                <!-- ADD PRODUCT -->
+
+                <a
+                    href="{% url 'seller_add_product' %}"
+                    class="nav-link"
+                >
+                    ＋
+
+                    <span>
+                        Add Product
+                    </span>
+
+                </a>
+
+
+            <!-- =================================================
+                 ADMIN
+            ================================================== -->
+
+            {% elif request.session.role == 'ADMIN' %}
+
+
+                <!-- USERS -->
+
+                <a
+                    href="/admin/admin_panel/user/"
+                    class="nav-link"
+                >
+
+                    ♙
+
+                    <span>
+                        Users
+                    </span>
+
+                </a>
+
+
+                <!-- PRODUCTS -->
+
+                <a
+                    href="/admin/admin_panel/product/"
+                    class="nav-link"
+                >
+
+                    ◈
+
+                    <span>
+                        Products
+                    </span>
+
+                </a>
+
+
+                <!-- ORDERS -->
+
+                <a
+                    href="/admin/admin_panel/order/"
+                    class="nav-link"
+                >
+
+                    ▣
+
+                    <span>
+                        Orders
+                    </span>
+
+                </a>
+
+
+                <!-- DJANGO ADMIN -->
+
+                <a
+                    href="/admin/"
+                    class="nav-link"
+                >
+
+                    ⚙
+
+                    <span>
+                        Django Admin
+                    </span>
+
+                </a>
+
+
+            {% endif %}
+
+
+        </nav>
+
+
+        <!-- =====================================================
+             SIDEBAR BOTTOM
+        ====================================================== -->
+
+        <div class="sidebar-bottom">
+
+
+            <!-- PROFILE -->
+
+            <a
+                href="{% url 'profile' %}"
+                class="nav-link"
+            >
+
+                ◯
+
+                <span>
+                    Profile
+                </span>
+
+            </a>
+
+
+            <!-- LOGOUT -->
+
+            <a
+                href="{% url 'frontend_logout' %}"
+                class="nav-link danger"
+            >
+
+                ↪
+
+                <span>
+                    Sign out
+                </span>
+
+            </a>
+
+
+        </div>
+
+
+    </aside>
+
+
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
+    <main class="main">
+
+
+        <!-- =================================================
+             TOP BAR
+        ================================================== -->
+
+        <header class="topbar">
+
+
+            <!-- MOBILE MENU -->
+
+            <button
+                class="menu-btn"
+                onclick="document.getElementById('sidebar').classList.toggle('open')"
+            >
+                ☰
+            </button>
+
+
+            <!-- PAGE TITLE -->
+
+            <div>
+
+                <div class="eyebrow">
+                    SMART E-COMMERCE
+                </div>
+
+                <h1>
+                    {{ title|default:"Dashboard" }}
+                </h1>
+
+            </div>
+
+
+            <!-- TOP ACTIONS -->
+
+            <div class="top-actions">
+
+
+                <!-- CUSTOMER CART -->
+
+                {% if request.session.role == 'CUSTOMER' or request.session.role == 'USER' or request.session.role == 'customer' %}
+
+                    <a
+                        class="icon-btn"
+                        href="{% url 'cart' %}"
+                    >
+
+                        🛒
+
+                        {% if cart_count %}
+
+                            <i>
+                                {{ cart_count }}
+                            </i>
+
+                        {% endif %}
+
+                    </a>
+
+                {% endif %}
+
+
+                <!-- CUSTOMER NOTIFICATIONS -->
+
+                {% if request.session.role == 'CUSTOMER' or request.session.role == 'USER' or request.session.role == 'customer' %}
+
+                    <a
+                        class="icon-btn"
+                        href="{% url 'notifications' %}"
+                    >
+
+                        🔔
+
+                        {% if unread_count %}
+
+                            <i>
+                                {{ unread_count }}
+                            </i>
+
+                        {% endif %}
+
+                    </a>
+
+                {% endif %}
+
+
+                <!-- PROFILE -->
+
+                <a
+                    class="user-chip"
+                    href="{% url 'profile' %}"
+                >
+
+                    <span>
+                        {{ request.session.name|default:"User"|first|upper }}
+                    </span>
+
+                    <strong>
+                        {{ request.session.name|default:"User" }}
+                    </strong>
+
+                </a>
+
+
+            </div>
+
+
+        </header>
+
+
+        <!-- =================================================
+             MESSAGES
+        ================================================== -->
+
+        {% if messages %}
+
+            <div class="flash-stack">
+
+                {% for message in messages %}
+
+                    <div
+                        class="flash {{ message.tags }}"
+                    >
+
+                        {{ message }}
+
+                        <button
+                            onclick="this.parentElement.remove()"
+                        >
+                            ×
+                        </button>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+
+        <!-- =================================================
+             PAGE CONTENT
+        ================================================== -->
+
+        <div class="page">
+
+            {% block content %}
+
+            {% endblock %}
+
+        </div>
+
+
+    </main>
+
+
+</div>
+
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="{% static 'frontend/js/app.js' %}"></script>
+
+
+{% block scripts %}
+
+{% endblock %}
+
+
+</body>
+
+</html>

@@ -1,0 +1,14 @@
+Django==6.1.1
+fastapi
+uvicorn[standard]
+sqlalchemy
+pymysql
+python-multipart
+python-jose
+bcrypt
+authlib
+python-dotenv
+stripe
+email-validator
+requests
+Pillow

@@ -1,0 +1,60 @@
+{% extends 'frontend/base.html' %}{% block content %}
+<section class="hero customer-hero">
+    <div><span class="badge light">CUSTOMER SPACE</span>
+        <h2>Good to see you, {{ request.session.name|default:"there" }}.</h2>
+        <p>Discover products you love and keep every order under control.</p>
+        <div class="hero-actions"><a class="primary" href="{% url 'products' %}">Explore products →</a><a class="ghost"
+                href="{% url 'orders' %}">View orders</a></div>
+    </div>
+    <div class="hero-art">
+        <div class="orbit">✦</div>
+        <div class="float-card">⚡ Fast checkout<br><small>Secure Stripe payments</small></div>
+    </div>
+</section>
+<div class="stats-grid">
+    <div class="stat"><span>Orders</span><strong>{{ order_count }}</strong><small>All your purchases</small></div>
+    <div class="stat"><span>Cart items</span><strong>{{ cart_count }}</strong><small>Ready when you are</small></div>
+    <div class="stat"><span>Notifications</span><strong>{{ unread_count }}</strong><small>Unread updates</small></div>
+    <div class="stat"><span>Account</span><strong class="green">Active</strong><small>Everything looks good</small>
+    </div>
+</div>
+<section class="section-head">
+    <div><span class="eyebrow">DISCOVER</span>
+        <h2>Fresh picks for you</h2>
+    </div><a href="{% url 'products' %}" class="text-link">See all →</a>
+</section>
+<div class="product-grid">{% for p in products %}<a class="product-card" href="{% url 'product_detail' p.obj.id %}">
+        <div class="product-image">{% if p.image_url %}<img src="{{ p.image_url }}" alt="{{ p.obj.product_name }}">{%
+            else %}<span>✦</span>{% endif %}</div>
+        <div class="product-info"><span>{{ p.obj.category }}</span>
+            <h3>{{ p.obj.product_name }}</h3><strong>₹{{ p.obj.product_price }}</strong>
+        </div>
+    </a>{% empty %}<div class="empty">No products available yet.</div>{% endfor %}</div>
+<section class="section-head">
+    <div><span class="eyebrow">ACTIVITY</span>
+        <h2>Recent orders</h2>
+    </div><a href="{% url 'orders' %}" class="text-link">View all →</a>
+</section>
+<div class="table-card">
+    <table>
+        <thead>
+            <tr>
+                <th>Order</th>
+                <th>Date</th>
+                <th>Total</th>
+                <th>Payment</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>{% for o in orders %}<tr>
+                <td>#{{ o.id }}</td>
+                <td>{{ o.created_at|date:"d M Y" }}</td>
+                <td>₹{{ o.total_amount }}</td>
+                <td><span class="status {{ o.payment_status|lower }}">{{ o.payment_status }}</span></td>
+                <td><span class="status {{ o.order_status|lower }}">{{ o.order_status }}</span></td>
+            </tr>{% empty %}<tr>
+                <td colspan="5" class="empty-cell">No orders yet.</td>
+            </tr>{% endfor %}</tbody>
+    </table>
+</div>
+{% endblock %}

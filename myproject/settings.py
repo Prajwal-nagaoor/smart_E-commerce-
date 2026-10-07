@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "admin_panel",
+    "frontend",
 ]
 
 MIDDLEWARE = [
@@ -121,7 +122,9 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
+FASTAPI_BASE_URL = "http://127.0.0.1:8000"
 
+STRIPE_PUBLISHABLE_KEY = "pk_test_51UNoEBFoAYjURbuHL9EHYf1B8sdYMR0pqTcf3CnKg7PJkBSXhOOEDTrr3ommrUskdencZT4r7SRPZnYsHqai9FTL00wnqFZv2f"
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 

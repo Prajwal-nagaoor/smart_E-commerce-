@@ -1,0 +1,1151 @@
+{% extends 'frontend/base.html' %}
+
+{% block content %}
+
+<style>
+
+    .admin-dashboard {
+        width: 100%;
+    }
+
+    /* ================= HERO ================= */
+
+    .admin-hero {
+        min-height: 250px;
+    }
+
+    /* ================= STATS ================= */
+
+    .admin-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin: 20px 0 28px;
+    }
+
+    .admin-stat {
+        background: #fff;
+        border: 1px solid #e7ebf2;
+        border-radius: 18px;
+        padding: 20px;
+        box-shadow: 0 8px 28px rgba(26,32,44,.04);
+    }
+
+    .admin-stat-label {
+        display: block;
+        color: #718096;
+        font-size: 12px;
+    }
+
+    .admin-stat-value {
+        display: block;
+        font-family: Manrope, sans-serif;
+        font-size: 27px;
+        font-weight: 800;
+        margin: 9px 0 3px;
+    }
+
+    .admin-stat-note {
+        color: #9aa3b2;
+        font-size: 11px;
+    }
+
+    /* ================= CHART GRID ================= */
+
+    .admin-chart-grid {
+        display: grid;
+        grid-template-columns: 1.2fr .8fr;
+        gap: 17px;
+    }
+
+    .admin-chart-card {
+        background: #fff;
+        border: 1px solid #e7ebf2;
+        border-radius: 18px;
+        padding: 20px;
+        min-height: 360px;
+        box-shadow: 0 8px 28px rgba(26,32,44,.04);
+    }
+
+    .admin-chart-card.full {
+        grid-column: 1 / -1;
+    }
+
+    .admin-chart-head {
+        margin-bottom: 18px;
+    }
+
+    .admin-chart-head .eyebrow {
+        display: block;
+        color: #8994a7;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .12em;
+        margin-bottom: 5px;
+    }
+
+    .admin-chart-head h3 {
+        margin: 0;
+        font-family: Manrope, sans-serif;
+        font-size: 17px;
+    }
+
+    .admin-chart-head p {
+        margin: 5px 0 0;
+        color: #718096;
+        font-size: 11px;
+    }
+
+    .admin-canvas-wrap {
+        position: relative;
+        width: 100%;
+        height: 275px;
+    }
+
+    .admin-canvas-wrap canvas {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    /* ================= REPORTS / EXPORTS ================= */
+
+    .admin-export-card {
+        background: #fff;
+        border: 1px solid #e7ebf2;
+        border-radius: 18px;
+        padding: 20px;
+        margin-top: 17px;
+        box-shadow: 0 8px 28px rgba(26,32,44,.04);
+    }
+
+    .admin-export-head {
+        margin-bottom: 18px;
+    }
+
+    .admin-export-head .eyebrow {
+        display: block;
+        color: #8994a7;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .12em;
+        margin-bottom: 5px;
+    }
+
+    .admin-export-head h3 {
+        margin: 0;
+        font-family: Manrope, sans-serif;
+        font-size: 17px;
+    }
+
+    .admin-export-head p {
+        margin: 5px 0 0;
+        color: #718096;
+        font-size: 11px;
+    }
+
+    .admin-export-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .admin-export-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 11px 16px;
+        border-radius: 10px;
+        background: #5948d5;
+        color: #fff;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 800;
+        transition: transform .15s ease, opacity .15s ease;
+    }
+
+    .admin-export-btn:hover {
+        opacity: .9;
+        transform: translateY(-1px);
+    }
+
+    /* ================= RECENT ORDERS ================= */
+
+    .admin-table-card {
+        background: #fff;
+        border: 1px solid #e7ebf2;
+        border-radius: 18px;
+        padding: 20px;
+        margin-top: 17px;
+        box-shadow: 0 8px 28px rgba(26,32,44,.04);
+    }
+
+    .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .admin-table th {
+        text-align: left;
+        color: #8994a7;
+        font-size: 10px;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        padding: 12px 10px;
+        border-bottom: 1px solid #e7ebf2;
+    }
+
+    .admin-table td {
+        padding: 13px 10px;
+        border-bottom: 1px solid #eef1f5;
+        font-size: 13px;
+    }
+
+    .admin-table tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .admin-status {
+        display: inline-flex;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 800;
+    }
+
+    .admin-status.pending {
+        background: #fff3dc;
+        color: #ad7417;
+    }
+
+    .admin-status.shipped {
+        background: #eaf0ff;
+        color: #4166c5;
+    }
+
+    .admin-status.delivered,
+    .admin-status.success,
+    .admin-status.paid {
+        background: #e7f8f1;
+        color: #13815f;
+    }
+
+    .admin-status.cancelled,
+    .admin-status.failed {
+        background: #ffebee;
+        color: #c13d50;
+    }
+
+    .admin-manage-link {
+        color: #5948d5;
+        font-weight: 800;
+        font-size: 12px;
+    }
+
+    /* ================= RESPONSIVE ================= */
+
+    @media(max-width:1100px) {
+
+        .admin-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .admin-chart-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-chart-card.full {
+            grid-column: auto;
+        }
+
+    }
+
+    @media(max-width:560px) {
+
+        .admin-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-chart-card {
+            min-height: 330px;
+        }
+
+        .admin-export-buttons {
+            flex-direction: column;
+        }
+
+        .admin-export-btn {
+            width: 100%;
+        }
+
+    }
+
+</style>
+
+
+<div class="admin-dashboard">
+
+
+    <!-- =====================================================
+         HERO
+    ====================================================== -->
+
+    <section class="hero admin-hero">
+
+        <div>
+
+            <span class="badge light">
+                CONTROL CENTER
+            </span>
+
+            <h2>
+                Business at a glance.
+            </h2>
+
+            <p>
+                Monitor customers, products, orders and payments
+                from one clean command center.
+            </p>
+
+        </div>
+
+
+        <div class="hero-stat">
+
+            <span>
+                System
+            </span>
+
+            <strong>
+                Operational
+            </strong>
+
+            <small>
+                FastAPI + Django workspace
+            </small>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         STATISTICS
+    ====================================================== -->
+
+    <section class="admin-stats">
+
+
+        <div class="admin-stat">
+
+            <span class="admin-stat-label">
+                Total users
+            </span>
+
+            <strong class="admin-stat-value">
+                {{ total_users|default:0 }}
+            </strong>
+
+            <small class="admin-stat-note">
+                Registered accounts
+            </small>
+
+        </div>
+
+
+        <div class="admin-stat">
+
+            <span class="admin-stat-label">
+                Products
+            </span>
+
+            <strong class="admin-stat-value">
+                {{ total_products|default:0 }}
+            </strong>
+
+            <small class="admin-stat-note">
+                Across all sellers
+            </small>
+
+        </div>
+
+
+        <div class="admin-stat">
+
+            <span class="admin-stat-label">
+                Orders
+            </span>
+
+            <strong class="admin-stat-value">
+                {{ total_orders|default:0 }}
+            </strong>
+
+            <small class="admin-stat-note">
+                All time
+            </small>
+
+        </div>
+
+
+        <div class="admin-stat">
+
+            <span class="admin-stat-label">
+                Total sales
+            </span>
+
+            <strong class="admin-stat-value">
+                ₹{{ total_sales|default:0|floatformat:2 }}
+            </strong>
+
+            <small class="admin-stat-note">
+                Successful payments
+            </small>
+
+        </div>
+
+
+    </section>
+
+
+    <!-- =====================================================
+         CHARTS
+    ====================================================== -->
+
+    <section class="admin-chart-grid">
+
+
+        <!-- ORDER PIPELINE -->
+
+        <div class="admin-chart-card">
+
+            <div class="admin-chart-head">
+
+                <span class="eyebrow">
+                    ORDERS
+                </span>
+
+                <h3>
+                    Order pipeline
+                </h3>
+
+                <p>
+                    Current order status
+                </p>
+
+            </div>
+
+
+            <div class="admin-canvas-wrap">
+
+                <canvas id="ordersChart"></canvas>
+
+            </div>
+
+        </div>
+
+
+        <!-- PRODUCTS BY CATEGORY -->
+
+        <div class="admin-chart-card">
+
+            <div class="admin-chart-head">
+
+                <span class="eyebrow">
+                    CATALOG
+                </span>
+
+                <h3>
+                    Products by category
+                </h3>
+
+                <p>
+                    Catalog distribution
+                </p>
+
+            </div>
+
+
+            <div class="admin-canvas-wrap">
+
+                <canvas id="categoryChart"></canvas>
+
+            </div>
+
+        </div>
+
+
+        <!-- PAYMENT STATUS -->
+
+        <div class="admin-chart-card">
+
+            <div class="admin-chart-head">
+
+                <span class="eyebrow">
+                    PAYMENTS
+                </span>
+
+                <h3>
+                    Payment health
+                </h3>
+
+                <p>
+                    Payment activity summary
+                </p>
+
+            </div>
+
+
+            <div class="admin-canvas-wrap">
+
+                <canvas id="paymentChart"></canvas>
+
+            </div>
+
+        </div>
+
+
+        <!-- SALES -->
+
+        <div class="admin-chart-card">
+
+            <div class="admin-chart-head">
+
+                <span class="eyebrow">
+                    SALES
+                </span>
+
+                <h3>
+                    Sales overview
+                </h3>
+
+                <p>
+                    Successful payment revenue
+                </p>
+
+            </div>
+
+
+            <div class="admin-canvas-wrap">
+
+                <canvas id="salesChart"></canvas>
+
+            </div>
+
+        </div>
+
+
+    </section>
+
+
+    <!-- =====================================================
+         REPORTS & EXPORTS
+    ====================================================== -->
+
+    <section class="admin-export-card">
+
+        <div class="admin-export-head">
+
+            <span class="eyebrow">
+                REPORTS
+            </span>
+
+            <h3>
+                Reports & Exports
+            </h3>
+
+            <p>
+                Download your e-commerce data as CSV reports.
+            </p>
+
+        </div>
+
+
+        <div class="admin-export-buttons">
+
+            <a
+                href="{% url 'export_users_csv' %}"
+                class="admin-export-btn"
+            >
+                Export Users CSV
+            </a>
+
+
+            <a
+                href="{% url 'export_products_csv' %}"
+                class="admin-export-btn"
+            >
+                Export Products CSV
+            </a>
+
+
+            <a
+                href="{% url 'export_orders_csv' %}"
+                class="admin-export-btn"
+            >
+                Export Orders CSV
+            </a>
+
+
+            <a
+                href="{% url 'export_payments_csv' %}"
+                class="admin-export-btn"
+            >
+                Export Payments CSV
+            </a>
+            <a
+    href="{% url 'export_orders_pdf' %}"
+    class="admin-export-btn"
+>
+    Export Orders PDF
+</a>
+
+<a
+    href="{% url 'export_sales_pdf' %}"
+    class="admin-export-btn"
+>
+    Export Sales PDF
+</a>
+
+<a
+    href="{% url 'export_analytics_pdf' %}"
+    class="admin-export-btn"
+>
+    Export Analytics PDF
+</a>
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         RECENT ORDERS
+    ====================================================== -->
+
+    <section class="admin-table-card">
+
+
+        <div
+            class="section-head compact"
+            style="margin-bottom:18px;"
+        >
+
+            <div>
+
+                <span class="eyebrow">
+                    LATEST
+                </span>
+
+                <h3>
+                    Recent orders
+                </h3>
+
+            </div>
+
+
+            <a
+                href="{% url 'admin_orders' %}"
+                class="admin-manage-link"
+            >
+                Manage →
+            </a>
+
+        </div>
+
+
+        <table class="admin-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Order
+                    </th>
+
+                    <th>
+                        Total
+                    </th>
+
+                    <th>
+                        Payment
+                    </th>
+
+                    <th>
+                        Status
+                    </th>
+
+                    <th>
+                        Date
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for o in recent_orders %}
+
+                <tr>
+
+                    <td>
+                        #{{ o.id }}
+                    </td>
+
+                    <td>
+                        ₹{{ o.total_amount }}
+                    </td>
+
+                    <td>
+                        {{ o.payment_status }}
+                    </td>
+
+                    <td>
+
+                        <span
+                            class="admin-status {{ o.order_status|lower }}"
+                        >
+                            {{ o.order_status }}
+                        </span>
+
+                    </td>
+
+                    <td>
+                        {{ o.created_at|date:"d M Y" }}
+                    </td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+
+                    <td
+                        colspan="5"
+                        style="
+                            text-align:center;
+                            color:#718096;
+                            padding:35px;
+                        "
+                    >
+                        No orders available.
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+
+            </tbody>
+
+        </table>
+
+
+    </section>
+
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+
+    /* =====================================================
+       ORDER CHART
+
+       The view provides:
+       pending, shipped, delivered, cancelled
+    ====================================================== */
+
+    const ordersCanvas =
+        document.getElementById("ordersChart");
+
+
+    if (ordersCanvas) {
+
+        new Chart(
+            ordersCanvas,
+            {
+
+                type: "bar",
+
+                data: {
+
+                    labels: [
+                        "Pending",
+                        "Shipped",
+                        "Delivered",
+                        "Cancelled"
+                    ],
+
+                    datasets: [
+
+                        {
+
+                            label: "Orders",
+
+                            data: [
+
+                                Number("{{ pending|default:0 }}"),
+
+                                Number("{{ shipped|default:0 }}"),
+
+                                Number("{{ delivered|default:0 }}"),
+
+                                Number("{{ cancelled|default:0 }}")
+
+                            ],
+
+                            borderWidth: 0,
+
+                            borderRadius: 8
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    plugins: {
+
+                        legend: {
+                            display: false
+                        }
+
+                    },
+
+                    scales: {
+
+                        y: {
+
+                            beginAtZero: true,
+
+                            ticks: {
+
+                                precision: 0
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        );
+
+    }
+
+
+    /* =====================================================
+       PRODUCTS BY CATEGORY
+
+       The view provides:
+       categories
+    ====================================================== */
+
+    const categoryCanvas =
+        document.getElementById("categoryChart");
+
+
+    const categoryLabels = [
+
+        {% for x in categories %}
+
+            "{{ x.category|escapejs }}"
+
+            {% if not forloop.last %},{% endif %}
+
+        {% endfor %}
+
+    ];
+
+
+    const categoryValues = [
+
+        {% for x in categories %}
+
+            Number("{{ x.total|default:0 }}")
+
+            {% if not forloop.last %},{% endif %}
+
+        {% endfor %}
+
+    ];
+
+
+    if (categoryCanvas) {
+
+        new Chart(
+            categoryCanvas,
+            {
+
+                type: "doughnut",
+
+                data: {
+
+                    labels: categoryLabels,
+
+                    datasets: [
+
+                        {
+
+                            label: "Products",
+
+                            data: categoryValues,
+
+                            borderWidth: 2
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    plugins: {
+
+                        legend: {
+
+                            position: "bottom"
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        );
+
+    }
+
+
+    /* =====================================================
+       PAYMENT STATUS
+
+       The view provides:
+       payments
+    ====================================================== */
+
+    const paymentCanvas =
+        document.getElementById("paymentChart");
+
+
+    const paymentLabels = [
+
+        {% for x in payments %}
+
+            "{{ x.status|escapejs }}"
+
+            {% if not forloop.last %},{% endif %}
+
+        {% endfor %}
+
+    ];
+
+
+    const paymentValues = [
+
+        {% for x in payments %}
+
+            Number("{{ x.total|default:0 }}")
+
+            {% if not forloop.last %},{% endif %}
+
+        {% endfor %}
+
+    ];
+
+
+    if (paymentCanvas) {
+
+        new Chart(
+            paymentCanvas,
+            {
+
+                type: "doughnut",
+
+                data: {
+
+                    labels: paymentLabels,
+
+                    datasets: [
+
+                        {
+
+                            label: "Payments",
+
+                            data: paymentValues,
+
+                            borderWidth: 2
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    plugins: {
+
+                        legend: {
+
+                            position: "bottom"
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        );
+
+    }
+
+
+    /* =====================================================
+       SALES CHART
+    ====================================================== */
+
+    const salesCanvas =
+        document.getElementById("salesChart");
+
+
+    const salesDates = [
+
+        {% for x in sales %}
+
+            "{{ x.created_at|date:'M Y' }}"
+
+            {% if not forloop.last %},{% endif %}
+
+        {% endfor %}
+
+    ];
+
+
+    const salesAmounts = [
+
+        {% for x in sales %}
+
+            Number("{{ x.amount|default:0 }}")
+
+            {% if not forloop.last %},{% endif %}
+
+        {% endfor %}
+
+    ];
+
+
+    if (salesCanvas) {
+
+        new Chart(
+            salesCanvas,
+            {
+
+                type: "line",
+
+                data: {
+
+                    labels:
+
+                        salesDates.length
+
+                            ? salesDates
+
+                            : ["No sales"],
+
+                    datasets: [
+
+                        {
+
+                            label: "Sales",
+
+                            data:
+
+                                salesAmounts.length
+
+                                    ? salesAmounts
+
+                                    : [0],
+
+                            borderWidth: 3,
+
+                            tension: 0.35,
+
+                            fill: false,
+
+                            pointRadius: 4
+
+                        }
+
+                    ]
+
+                },
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    plugins: {
+
+                        legend: {
+                            display: true
+                        }
+
+                    },
+
+                    scales: {
+
+                        y: {
+
+                            beginAtZero: true
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        );
+
+    }
+
+
+});
+
+</script>
+
+{% endblock %}
