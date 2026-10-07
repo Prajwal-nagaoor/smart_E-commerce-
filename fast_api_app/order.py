@@ -1,9 +1,9 @@
 from fastapi import HTTPException, Depends, APIRouter, Request
 from sqlalchemy.orm import Session
 from .database import get_db
-from .schemas import OrderResponse, OrderItemResponse, PaymentResponse, PaymentRequest
+from .schemas import OrderResponse, OrderItemResponse, PaymentResponse, PaymentRequest, NotificationResponse
 from .auth import get_current_user
-from .model import User, Product, Cart, Order, OrderItem, Payment
+from .model import User, Product, Cart, Order, OrderItem, Payment, Notification
 import stripe
 import os
 from dotenv import load_dotenv
@@ -60,6 +60,16 @@ def create_order(
 
     db.add(new_order)
     db.flush()
+
+    # Create order confirmation notification
+    new_notification = Notification(
+        user_id=current_user.id,
+        type="ORDER_CONFIRMATION",
+        message=f"Your order #{new_order.id} has been placed successfully.",
+        is_read=False
+    )
+
+    db.add(new_notification)
 
     for i in cart_item:
 
@@ -193,6 +203,15 @@ def payment(
         )
 
     except stripe.StripeError as e:
+        new_notification = Notification(
+            user_id = current_user.id,
+            type = "PAYMENT_FAILED",
+            message = f"payment failed for order #{order.id}",
+            is_read = False
+        )
+        db.add(new_notification)
+        db.commit()
+        
         raise HTTPException(
             status_code=400,
             detail=str(e)
@@ -269,3 +288,45 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
             db.commit()
 
     return {"message": "Webhook received"}
+@order.get("/view-notification",response_model=list[NotificationResponse])
+def view_notification(db:Session=Depends(get_db),current_user:User=Depends(get_current_user)):
+    notifications = db.query(Notification).filter(
+        Notification.user_id == current_user.id
+    ).order_by(
+        Notification.created_at.desc()
+    ).all()
+
+    if not notifications:
+        raise HTTPException(
+            status_code=404,
+            detail="No notifications found"
+        )
+
+    return notifications
+@order.put("/mark-read/{notification_id}")
+def mark_notification_read(notification_id:int, db:Session=Depends(get_db), current_user:User=Depends(get_current_user)):
+    notification = db.query(Notification).filter(
+        Notification.id == notification_id,
+        Notification.user_id == current_user.id
+    ).first()
+
+    if not notification:
+        raise HTTPException(
+            status_code=400,
+            detail="Notification not found"
+        )
+    if notification.is_read:
+        raise HTTPException(
+            status_code=400,
+            detail="Notification is already read"
+        )
+    notification.is_read = True
+    db.commit()
+    db.refresh(notification)
+
+    return {
+        "Message":"Notification marked as read",
+        "Notification_id":notification.id,
+        "is_read":notification.is_read
+    }
+

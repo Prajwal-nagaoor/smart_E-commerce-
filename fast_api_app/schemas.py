@@ -95,4 +95,17 @@ class PaymentResponse(BaseModel):
 
     model_config=ConfigDict(from_attributes=True)
 
+
+class NotificationResponse(BaseModel):
+    id : int
+    user_id : int
+    type : str
+    message : str
+    is_read : bool
+    created_at : datetime
+
+    class config:
+        from_attributes = True
+
+
     
